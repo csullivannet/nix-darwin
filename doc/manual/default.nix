@@ -4,7 +4,7 @@
 , version
 , revision
 , nixpkgsRevision
-, extraSources ? []
+, extraSources ? [ ]
 , prefix ? ../..
 }:
 
@@ -42,7 +42,8 @@ let
     };
   };
 
-in rec {
+in
+rec {
   # TODO: Use `optionsDoc.optionsJSON` directly once upstream
   # `nixosOptionsDoc` is more customizable.
   optionsJSON = runCommand "options.json"
@@ -60,10 +61,11 @@ in rec {
 
   # Generate the nix-darwin manual.
   manualHTML = runCommand "darwin-manual-html"
-    { nativeBuildInputs = [ buildPackages.nixos-render-docs ];
+    {
+      nativeBuildInputs = [ buildPackages.nixos-render-docs ];
       styles = lib.sourceFilesBySuffices (pkgs.path + "/doc") [ ".css" ];
       meta.description = "The Darwin manual in HTML format";
-      allowedReferences = ["out"];
+      allowedReferences = [ "out" ];
     }
     ''
       # Generate the HTML manual.
@@ -71,6 +73,7 @@ in rec {
       mkdir -p $dst
 
       cp $styles/style.css $dst
+      cp $styles/overrides.css $dst
       cp -r ${pkgs.documentation-highlighter} $dst/highlightjs
 
       substitute ${./manual.md} manual.md \
@@ -85,6 +88,7 @@ in rec {
         --revision ${lib.escapeShellArg revision} \
         --generator "nixos-render-docs ${lib.version}" \
         --stylesheet style.css \
+        --stylesheet overrides.css \
         --stylesheet highlightjs/mono-blue.css \
         --script ./highlightjs/highlight.pack.js \
         --script ./highlightjs/loader.js \
@@ -105,8 +109,9 @@ in rec {
 
   # Generate the nix-darwin manpages.
   manpages = runCommand "darwin-manpages"
-    { nativeBuildInputs = [ buildPackages.nixos-render-docs ];
-      allowedReferences = ["out"];
+    {
+      nativeBuildInputs = [ buildPackages.nixos-render-docs ];
+      allowedReferences = [ "out" ];
     }
     ''
       # Generate manpages.
